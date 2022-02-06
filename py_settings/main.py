@@ -14,16 +14,9 @@ SIMPLE_OPTION_TYPE = str | int | bool | Iterable | None
 
 
 class Settings:
-    
-    @staticmethod
-    def from_dict(data: dict) -> Settings:
-        parent = Settings()
-
-        for key, value in data.items():
-            if type(value) == dict:
-                value = Settings.from_dict(value)
-            setattr(parent, key, value)
-        return parent
+    @classmethod
+    def load_from_file(cls, path: str) -> Settings:
+        return Settings._from_dict(cls._load_settings_file(path))
 
     def get_by_regex(self, regex_str: re.Pattern) -> Iterable[Settings]:
         output = []
@@ -40,7 +33,17 @@ class Settings:
 
     def has(self, key: str) -> bool:
         return hasattr(self, key)
-    
+
+    @staticmethod
+    def _from_dict(data: dict) -> Settings:
+        parent = Settings()
+
+        for key, value in data.items():
+            if type(value) == dict:
+                value = Settings._from_dict(value)
+            setattr(parent, key, value)
+        return parent
+
     @classmethod
     def _load_settings_file(cls, path: str) -> dict:
         with pathlib.Path(path).open() as file:
